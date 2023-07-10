@@ -1,0 +1,39 @@
+[programs]
+notes = [
+    'C',
+    'C#',
+    'D',
+    'D#',
+    'E',
+    'F',
+    'F#',
+    'G',
+    'G#',
+    'A',
+    'A#',
+    'B',
+]
+intervals = [
+    'unison',
+    'min 2nd',
+    'maj 2nd',
+    'min 3rd',
+    'maj 3rd',
+    '4th',
+    '5th',
+    'min 6th',
+    'maj 6th',
+    'min 7th',
+    'maj 7th',
+    'octave',
+]
+chords = [
+    'maj',
+    'min',
+    'dim',
+]
+
+[settings]
+octave_range = [2, 5]
+note_duration = 1800
+identity_duration = 2700
