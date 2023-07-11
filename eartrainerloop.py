@@ -24,6 +24,10 @@ class Sound:
             audio_segments = []
             for filename in self.filenames:
                 audio_segment = pydub.AudioSegment.from_wav(filename)
+                # When overlaying audio segments, reduce the volume to
+                # avoid clipping.
+                if not self.sequential:
+                    audio_segment = self.attenuated(audio_segment)
                 audio_segments.append(audio_segment)
 
             combined_audio = None
@@ -35,9 +39,7 @@ class Sound:
                     if self.sequential:
                         combined_audio = combined_audio + audio_segment
                     else:
-                        # When combining, lower the volume of each audio segment
-                        # to avoid clipping
-                        combined_audio = combined_audio.overlay(audio_segment - 6)
+                        combined_audio = combined_audio.overlay(audio_segment)
 
             wav_obj = simpleaudio.WaveObject(
                 combined_audio.raw_data,
@@ -47,6 +49,9 @@ class Sound:
             )
 
         wav_obj.play()
+
+    def attenuated(self, audio_segment):
+        return audio_segment - 6
 
     def cleaned_filename(self, filename):
         return filename.replace('#', 'sh').replace('b', 'flat')
