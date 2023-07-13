@@ -310,7 +310,10 @@ class Identity:
         identity_parts = identity.split(' ')
         filenames = []
         for part in identity_parts:
-            filenames.append(f'./samples/identity/{part}.wav')
+            if part == '5th':
+                filenames.append(f'./samples/identity/fif.wav')
+            else:
+                filenames.append(f'./samples/identity/{part}.wav')
         self.sound = Sound(filenames, sequential=True)
 
     def __repr__(self):
