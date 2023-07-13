@@ -245,9 +245,10 @@ class Chord:
         'dim': ['min 3rd', 'dim 5th'],
     }
 
-    def __init__(self, chord_name, octave):
+    def __init__(self, chord_name, octave, inversion=0):
         self.chord_name = chord_name
         self.octave = octave
+        self.inversion = inversion
 
         root_note_name, chord_type = chord_name.split(' ')
         root_note = Note(root_note_name, octave)
@@ -258,6 +259,9 @@ class Chord:
             interval = Interval(interval_name, root_note)
             self.notes.append(root_note.add_interval(interval))
 
+        for i in range(0, inversion):
+            self.notes[i].octave += 1
+
         filenames = []
         for note in self.notes:
             filenames.append(f'./samples/note/{note.name}.wav')
@@ -267,7 +271,33 @@ class Chord:
 
     @property
     def name(self):
-        return f'{self.chord_name}{self.octave}'
+        chord_name = f'{self.chord_name}{self.octave}'
+        if self.inversion:
+            chord_name += f' (inversion {self.inversion})'
+
+        return chord_name
+
+    def limit_to_octaves(self, octave_range):
+        below_range = False
+        above_range = False
+
+        if self.octave < octave_range.start:
+            below_range = True
+        elif any([note.octave < octave_range.start for note in self.notes]):
+            below_range = True
+        elif self.octave > octave_range.stop:
+            above_range = True
+        elif any([note.octave > octave_range.stop for note in self.notes]):
+            above_range = True
+
+        # If any notes in the chord fall below the octave_range, return
+        # a chord that is 1 octave lower.
+        if below_range:
+            return Chord(self.chord_name, self.octave + 1, self.inversion)
+        elif above_range:
+            return Chord(self.chord_name, self.octave - 1, self.inversion)
+
+        return self
 
     def __repr__(self):
         return f'Chord: {self.name}'
@@ -350,6 +380,7 @@ class ConfigFile:
         chord_programs = self.config['programs']['chords'] or []
         note_duration = self.settings['note_duration']
         identity_duration = self.settings['identity_duration']
+        chord_inversions = self.settings['chord_inversions']
 
         programs = []
 
@@ -357,12 +388,21 @@ class ConfigFile:
             for note_name in Note.NOTES:
                 chord_name = f'{note_name} {chord_type}'
                 for octave in self.octave_range:
-                    chord = Chord(chord_name, octave)
+                    chord = Chord(chord_name, octave).limit_to_octaves(self.octave_range)
                     program = Program(f'Chord - {chord.name}', [
                         ProgramStep_PlayChord(chord, note_duration),
                         ProgramStep_PlayIdentity(chord.identity, identity_duration),
                     ])
                     programs.append(program)
+
+                    if chord_inversions:
+                        for i in range(1, len(chord.notes)):
+                            inverted_chord = Chord(chord_name, octave, inversion=i).limit_to_octaves(self.octave_range)
+                            program = Program(f'Chord - {inverted_chord.name}', [
+                                ProgramStep_PlayChord(inverted_chord, note_duration),
+                                ProgramStep_PlayIdentity(inverted_chord.identity, identity_duration),
+                            ])
+                            programs.append(program)
 
         return programs
 

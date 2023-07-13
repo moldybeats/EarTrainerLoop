@@ -37,3 +37,4 @@ chords = [
 octave_range = [2, 5]
 note_duration = 1800
 identity_duration = 2700
+chord_inversions = true
