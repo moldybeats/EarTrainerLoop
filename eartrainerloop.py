@@ -378,6 +378,7 @@ class ConfigFile:
 
     def read_chord_programs(self):
         chord_programs = self.config['programs']['chords'] or []
+        chord_note_duration = self.settings['chord_note_duration']
         note_duration = self.settings['note_duration']
         identity_duration = self.settings['identity_duration']
         chord_inversions = self.settings['chord_inversions']
@@ -389,19 +390,23 @@ class ConfigFile:
                 chord_name = f'{note_name} {chord_type}'
                 for octave in self.octave_range:
                     chord = Chord(chord_name, octave).limit_to_octaves(self.octave_range)
-                    program = Program(f'Chord - {chord.name}', [
-                        ProgramStep_PlayChord(chord, note_duration),
-                        ProgramStep_PlayIdentity(chord.identity, identity_duration),
-                    ])
+                    steps = []
+                    for note in chord.notes:
+                        steps.append(ProgramStep_PlayNote(note, chord_note_duration))
+                    steps.append(ProgramStep_PlayChord(chord, note_duration))
+                    steps.append(ProgramStep_PlayIdentity(chord.identity, identity_duration))
+                    program = Program(f'Chord - {chord.name}', steps)
                     programs.append(program)
 
                     if chord_inversions:
                         for i in range(1, len(chord.notes)):
                             inverted_chord = Chord(chord_name, octave, inversion=i).limit_to_octaves(self.octave_range)
-                            program = Program(f'Chord - {inverted_chord.name}', [
-                                ProgramStep_PlayChord(inverted_chord, note_duration),
-                                ProgramStep_PlayIdentity(inverted_chord.identity, identity_duration),
-                            ])
+                            steps = []
+                            for note in inverted_chord.notes:
+                                steps.append(ProgramStep_PlayNote(note, chord_note_duration))
+                            steps.append(ProgramStep_PlayChord(inverted_chord, note_duration))
+                            steps.append(ProgramStep_PlayIdentity(inverted_chord.identity, identity_duration))
+                            program = Program(f'Chord - {inverted_chord.name}', steps)
                             programs.append(program)
 
         return programs
