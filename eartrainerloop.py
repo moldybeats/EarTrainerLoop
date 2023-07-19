@@ -260,7 +260,8 @@ class Chord:
             self.notes.append(root_note.add_interval(interval))
 
         for i in range(0, inversion):
-            self.notes[i].octave += 1
+            note = self.notes.pop(0)
+            self.notes.append(note.add_semitones(12))
 
         filenames = []
         for note in self.notes:
